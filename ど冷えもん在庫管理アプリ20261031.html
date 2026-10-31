@@ -1,0 +1,110 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ど冷えもん 在庫管理 v3</title><style>
+:root{font-family:system-ui,-apple-system,'Yu Gothic',Meiryo,sans-serif;color:#18243a;background:#f4f7fb}*{box-sizing:border-box}body{margin:0;padding:18px 16px 120px}.wrap{max-width:1080px;margin:auto}h1{font-size:24px;margin:0 0 6px}h2{font-size:18px;margin:0 0 14px}.sub{color:#607089;font-size:13px;margin-bottom:20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.panel{background:#fff;border:1px solid #e1e8f0;border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 12px #12203b07}.stat{padding:14px;border-radius:12px;background:#f0f5fc}.stat .v{font-size:26px;font-weight:800}.stat small{color:#52637a}table{width:100%;border-collapse:collapse}th,td{padding:10px 8px;border-bottom:1px solid #e9eef5;text-align:left;font-size:14px}th{background:#f5f8fc;color:#4c5c71;font-size:12px}input,select{font:inherit;padding:9px;border:1px solid #c9d4e2;border-radius:8px;background:white;max-width:100%;min-width:0}input[type=number]{width:80px}input.product{width:100%;min-width:130px}button,.filelabel{font:inherit;border:0;border-radius:9px;background:#1c5ed8;color:#fff;padding:10px 14px;cursor:pointer;font-weight:700;display:inline-block}button.secondary,.filelabel{background:#e8effb;color:#17499f}button.danger{background:#c83434}button:disabled{opacity:.5;cursor:not-allowed}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:13px}.muted{color:#6d7a8d;font-size:12px}.warn{color:#ba3a16;font-weight:700}.good{color:#14774d;font-weight:700}.scroll{overflow:auto}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.pill{background:#e9f2ff;color:#2153a0;padding:5px 9px;border-radius:99px;font-size:12px}.capacity{position:fixed;bottom:0;left:0;right:0;background:#12243e;color:#fff;padding:11px 16px;box-shadow:0 -3px 18px #0002;z-index:10}.capacity .inner{max-width:1080px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px}.capacity strong{font-size:16px}.hint{padding:10px 12px;background:#fff8e7;border-radius:8px;font-size:13px;color:#795312}.inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}#msg{min-height:18px;color:#136a43;font-size:13px}.tight td{padding:7px}.tag{display:inline-block;background:#e8f6ed;color:#197143;border-radius:6px;padding:3px 6px}.bad{color:#c53131}.history{max-height:190px;overflow:auto}label{font-size:13px;color:#4c5c71}.mini{font-size:12px}@media(max-width:760px){body{padding:12px 10px 130px}.grid{grid-template-columns:1fr 1fr}.panel{padding:12px}h1{font-size:21px}th,td{padding:8px 5px;font-size:12px}input[type=number]{width:62px;padding:7px}input.product{min-width:110px}.capacity .inner{font-size:11px}.capacity strong{font-size:13px}}@media(max-width:390px){.grid{grid-template-columns:1fr 1fr}.stat .v{font-size:21px}}
+
+body{padding-bottom:135px}.panel{scroll-margin-top:15px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=number]{width:78px!important;font-size:16px}select{min-width:140px;font-size:15px}
+.scroll{overflow-x:auto}td,th{white-space:nowrap}.wide{min-width:150px}
+#stockRows input{width:72px}.summary{padding:14px;background:#edf5ff;border-radius:10px;margin:12px 0;line-height:1.9}
+.capacity{font-size:12px}.capacity .inner{gap:6px}.capacity span{white-space:nowrap}
+@media(max-width:760px){.two{grid-template-columns:1fr}.capacity{padding:8px}.capacity .inner{font-size:10px;justify-content:center}.capacity strong{font-size:12px}body{padding-bottom:160px}}
+</style></head><body>
+<div class="wrap"><div class="row"><div><h1>ど冷えもん 在庫・持参計画</h1><div class="sub">自販機２台・奇数コラムのみ／ストッカー合算85個／金額管理なし</div></div><span class="pill">この端末に自動保存</span></div>
+<div class="grid"><div class="stat"><small>自販機在庫</small><div class="v" id="vTotal">0 / 100</div></div><div class="stat"><small>ストッカー実在庫</small><div class="v" id="sTotal">0 / 85</div></div><div class="stat"><small>自販機の不足</small><div class="v" id="rTotal">0個</div></div></div>
+<section class="panel"><h2>① 商品登録</h2><p class="muted">商品を一度登録すると、自販機の各コラムでプルダウン選択できます。読み方が違う名前は「別名」に登録できます。</p>
+<div class="inline"><label>商品名 <input id="newProduct" placeholder="例：天運フライセット"></label><label>別名・読み（任意） <input id="newAlias" placeholder="例：てんうんふらいせっと"></label><button id="addProduct">商品を登録</button></div><div class="scroll"><table><thead><tr><th>登録商品</th><th>別名・読み（編集可）</th><th>操作</th></tr></thead><tbody id="productRows"></tbody></table></div></section>
+<section class="panel"><h2>② 自販機の現在庫を入力</h2><p class="muted">初期版と同じ一覧形式です。商品は矢印から選択し、現在庫は0〜10個を入力してください。</p>
+<div class="scroll"><table><thead><tr><th>自販機</th><th>コラム</th><th>商品名 ▼</th><th>現在庫（入力）</th><th>最大</th><th>不足数</th></tr></thead><tbody id="vendRows"></tbody></table></div>
+<div class="actions"><button class="secondary" id="clearVends">現在庫を0にする</button></div></section>
+<section class="panel"><h2>③ ストッカー在庫と持参数（商品別）</h2><p class="muted">ストッカー実在庫は手入力で修正できます。「持っていく数」を試しに入れると、既存在庫を自販機に優先補充した場合の予想残数がすぐ変わります。</p>
+<div class="scroll"><table><thead><tr><th>商品</th><th>ストッカー実在庫<br>（手入力）</th><th>自販機不足</th><th>持っていく数<br>（手入力）</th><th>自販機へ補充</th><th>補充後ストッカー</th></tr></thead><tbody id="stockRows"></tbody></table></div>
+<div class="summary" id="planSummary"></div><div class="actions"><button id="commit">この持参・補充計画を確定</button><button class="secondary" id="clearPlan">持参数をすべて0に戻す</button></div><p class="hint" id="planHint"></p></section>
+<section class="panel"><h2>④ CSV読み込み・書き出し</h2><p class="muted">手入力とCSVの両方に対応。RSクラウドの「物販機コラム-明細CSV出力」に対応しました。IPC名の末尾「１」「２」で自販機を判定し、奇数コラムのみ読み込みます。一般CSV・ストッカーCSVにも対応。読み込み前に確認します。</p>
+<div class="actions"><label class="filelabel">CSVファイルを選ぶ<input type="file" id="csvFile" accept=".csv,text/csv" hidden></label><button class="secondary" id="csvExport">現在庫をCSV出力</button><button class="secondary" id="template">CSVひな形を出力</button></div><p id="csvStatus" class="muted"></p></section>
+<section class="panel"><h2>⑤ バックアップ・履歴</h2><div class="actions"><button class="secondary" id="export">JSONバックアップ</button><label class="filelabel">JSON復元<input type="file" id="import" accept=".json,application/json" hidden></label><button class="secondary" id="undo">直前の確定操作を戻す</button><button class="danger" id="reset">全データ初期化</button></div><div class="history"><table><tbody id="history"></tbody></table></div><p class="muted">端末・ブラウザ内保存のため、別端末との自動同期はありません。旧版で入力したデータがある場合は可能な範囲で読み込みます。RSクラウドとは自動連携していません。</p></section>
+</div><div class="capacity"><div class="inner"><strong>最大収納数</strong><span>自販機① 50</span><span>自販機② 50</span><span>ストッカー大 55</span><span>小 30</span><strong>ストッカー計 85 ／ 全体 185個</strong></div></div>
+<script>
+(()=>{'use strict';
+const KEY='dohiem_inventory_v3', OLD='dohiem_inventory_v1', cols=[1,3,5,7,9], $=id=>document.getElementById(id);
+const base=()=>({vends:[1,2].flatMap(machine=>cols.map(col=>({id:`${machine}-${col}`,machine,col,product:'',qty:0}))),stock:{},products:[],aliases:{},history:[]});
+const num=x=>/^\d+$/.test(String(x).trim())?Number(x):NaN;
+const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=x=>String(x||'').normalize('NFKC').trim().replace(/\s+/g,'').toLowerCase().replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-96));
+let state;try{state=JSON.parse(localStorage.getItem(KEY)||localStorage.getItem(OLD)||'null')||base()}catch{state=base()}
+if(!Array.isArray(state.vends)||state.vends.length!==10)state=base();
+state.stock=state.stock||{};state.products=Array.isArray(state.products)?state.products:[];state.aliases=state.aliases||{};state.history=state.history||[];
+for(const p of [...state.vends.map(v=>v.product),...Object.keys(state.stock),...(state.extra||[])])if(p&&!state.products.includes(p))state.products.push(p);
+let bring={},undo=null;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){alert('自動保存できません。ブラウザの保存設定をご確認ください')}}
+function snapshot(){undo=JSON.stringify(state)}
+function log(x){state.history.unshift({time:new Date().toLocaleString('ja-JP'),msg:x});state.history=state.history.slice(0,100)}
+function canon(x){let n=norm(x);return state.products.find(p=>norm(p)===n||norm(state.aliases[p])===n)||null}
+function register(x,alias=''){x=String(x||'').trim();if(!x)return null;const found=canon(x);if(found)return found;state.products.push(x);state.stock[x]=state.stock[x]||0;state.aliases[x]=String(alias||'').trim();return x}
+function total(){return Object.values(state.stock).reduce((a,v)=>a+(Number(v)||0),0)}
+function need(v){return v.product?Math.max(0,10-v.qty):0}
+function simulate(){let rows=[],sumBring=0,sumStock=0,sumFill=0,sumNeed=0;
+for(const p of state.products){const n=state.vends.filter(v=>v.product===p).reduce((a,v)=>a+need(v),0),have=state.stock[p]||0,b=bring[p]||0,fill=Math.min(n,have+b),remain=have+b-fill;
+rows.push({p,n,have,b,fill,remain});sumBring+=b;sumStock+=remain;sumFill+=fill;sumNeed+=n}
+return {rows,sumBring,sumStock,sumFill,sumNeed,free:85-sumStock}}
+function renderProducts(){$('productRows').innerHTML=state.products.map(p=>`<tr><td>${esc(p)}</td><td><input class="wide" data-alias="${esc(p)}" value="${esc(state.aliases[p]||'')}" placeholder="別名・読み"></td><td><button class="secondary" data-rename="${esc(p)}">名称変更</button></td></tr>`).join('')||'<tr><td colspan="3">商品がまだ登録されていません</td></tr>';
+$('productRows').querySelectorAll('[data-alias]').forEach(e=>e.onchange=()=>{state.aliases[e.dataset.alias]=e.value.trim();save()});
+$('productRows').querySelectorAll('[data-rename]').forEach(e=>e.onclick=()=>{const p=e.dataset.rename,x=prompt('新しい商品名',p);if(!x||!x.trim()||x.trim()===p)return;const next=x.trim();if(canon(next)&&canon(next)!==p){alert('同じ商品が登録済みです');return}snapshot();state.products=state.products.map(y=>y===p?next:y);state.stock[next]=state.stock[p]||0;delete state.stock[p];state.aliases[next]=state.aliases[p]||'';delete state.aliases[p];state.vends.forEach(v=>{if(v.product===p)v.product=next});bring[next]=bring[p]||0;delete bring[p];log(`${p}を${next}に名称変更`);save();render()})}
+function renderVends(){const opts='<option value="">商品を選択</option>'+state.products.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+$('vendRows').innerHTML=state.vends.map(v=>`<tr><td>${v.machine}号機</td><td>${v.col}</td><td><select class="wide" data-vproduct="${v.id}">${opts}</select></td><td><input type="number" inputmode="numeric" min="0" max="10" data-vqty="${v.id}" value="${v.qty}"></td><td>10</td><td>${need(v)}</td></tr>`).join('');
+$('vendRows').querySelectorAll('[data-vproduct]').forEach(e=>{const v=state.vends.find(v=>v.id===e.dataset.vproduct);e.value=v.product;e.onchange=()=>{v.product=e.value;save();renderVends();renderRest()}});
+$('vendRows').querySelectorAll('[data-vqty]').forEach(e=>{const v=state.vends.find(v=>v.id===e.dataset.vqty);e.onchange=()=>{const n=num(e.value);if(!Number.isInteger(n)||n>10){alert('0〜10の整数で入力してください');e.value=v.qty;return}v.qty=n;save();renderVends();renderRest()}})}
+function renderRest(){const sim=simulate();$('vTotal').textContent=state.vends.reduce((a,v)=>a+v.qty,0)+'/100';$('sTotal').textContent=total()+'/85';$('rTotal').textContent=sim.sumNeed+'個';
+$('stockRows').innerHTML=sim.rows.map(r=>`<tr><td>${esc(r.p)}</td><td><input type="number" inputmode="numeric" min="0" data-stock="${esc(r.p)}" value="${r.have}"></td><td>${r.n}</td><td><input type="number" inputmode="numeric" min="0" data-bring="${esc(r.p)}" value="${r.b}"></td><td>${r.fill}</td><td><strong>${r.remain}</strong></td></tr>`).join('')||'<tr><td colspan="6">①で商品登録してください</td></tr>';
+$('stockRows').querySelectorAll('[data-stock]').forEach(e=>e.onchange=()=>{const p=e.dataset.stock,n=num(e.value);if(!Number.isSafeInteger(n)||total()-(state.stock[p]||0)+n>85){alert('ストッカー実在庫は0以上の整数、合計85個以内で入力してください');e.value=state.stock[p]||0;return}snapshot();state.stock[p]=n;log(`${p}の実在庫を${n}個に修正`);save();renderRest()});
+$('stockRows').querySelectorAll('[data-bring]').forEach(e=>e.oninput=()=>{const n=num(e.value);if(!Number.isSafeInteger(n)){ $('planHint').textContent='持参数は0以上の整数で入力してください';$('commit').disabled=true;return}bring[e.dataset.bring]=n;updatePreview()});
+updatePreview();$('history').innerHTML=state.history.map(h=>`<tr><td class="mini">${esc(h.time)}</td><td>${esc(h.msg)}</td></tr>`).join('')||'<tr><td>履歴はありません</td></tr>'}
+function updatePreview(){const s=simulate();$('stockRows').querySelectorAll('[data-bring]').forEach(e=>{const p=e.dataset.bring,r=s.rows.find(x=>x.p===p),tr=e.closest('tr');tr.children[4].textContent=r.fill;tr.children[5].textContent=r.remain});
+$('planSummary').innerHTML=`<strong>持っていく合計：${s.sumBring}個</strong> ／ 自販機へ補充：${s.sumFill}個<br>ストッカー予想残数：<strong>${s.sumStock} / 85個</strong> ／ 予想空き容量：<strong>${s.free}個</strong><br>自販機の未補充：${s.sumNeed-s.sumFill}個`;
+$('planHint').textContent=s.free<0?'ストッカー容量85個を超えます。持参数を減らしてください。':'既存ストッカー在庫から先に自販機へ補充し、不足分は持参品から充当する試算です。確定前は実在庫を変更しません。';
+$('commit').disabled=s.free<0||(!s.sumBring&&!s.sumFill)}
+function render(){renderProducts();renderVends();renderRest()}
+$('addProduct').onclick=()=>{const p=$('newProduct').value.trim(),alias=$('newAlias').value.trim();if(!p)return alert('商品名を入力してください');const prev=canon(p);if(prev){alert(`「${prev}」は登録済みです`);return}register(p,alias);log(`${p}を商品登録`);$('newProduct').value='';$('newAlias').value='';save();render()};
+$('clearVends').onclick=()=>{if(!confirm('自販機の現在庫をすべて0にしますか？'))return;snapshot();state.vends.forEach(v=>v.qty=0);log('自販機現在庫を0に変更');save();render()};
+$('clearPlan').onclick=()=>{bring={};renderRest()};
+$('commit').onclick=()=>{const s=simulate();if(s.free<0)return alert('ストッカー容量を超えます');if(!confirm(`持参${s.sumBring}個、自販機補充${s.sumFill}個、ストッカー予想残${s.sumStock}個を確定しますか？`))return;snapshot();
+for(const r of s.rows){let left=r.fill;for(const v of state.vends.filter(v=>v.product===r.p)){const n=Math.min(need(v),left);v.qty+=n;left-=n}state.stock[r.p]=r.remain}log(`持参${s.sumBring}個、自販機補充${s.sumFill}個、ストッカー残${s.sumStock}個`);bring={};save();render();alert('計画を在庫へ反映しました')};
+function download(name,text,type){const a=document.createElement('a'),url=URL.createObjectURL(new Blob(['\ufeff'+text],{type}));a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000)}
+const csvCell=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+$('csvExport').onclick=()=>{const rows=[['自販機','コラム','商品名','現在庫','ストッカー在庫']];state.vends.forEach(v=>rows.push([v.machine,v.col,v.product,v.qty,'']));state.products.forEach(p=>rows.push(['','',p,'',state.stock[p]||0]));download('ど冷えもん_在庫.csv',rows.map(r=>r.map(csvCell).join(',')).join('\r\n'),'text/csv;charset=utf-8')};
+$('template').onclick=()=>download('ど冷えもん_CSVひな形.csv','自販機,コラム,商品名,現在庫,ストッカー在庫\r\n1,1,天運フライセット,5,\r\n,,天運フライセット,,12','text/csv;charset=utf-8');
+function parseCSV(text){text=text.replace(/^\ufeff/,'');let rows=[],row=[],v='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){v+='"';i++}else q=!q}else if(c===','&&!q){row.push(v);v=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(v);if(row.some(x=>x.trim()))rows.push(row);row=[];v=''}else v+=c}if(q)throw Error('CSVの引用符が閉じられていません');row.push(v);if(row.some(x=>x.trim()))rows.push(row);return rows}
+$('csvFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{
+const buffer=await file.arrayBuffer();let txt;try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buffer)}catch{txt=new TextDecoder('shift_jis').decode(buffer)}
+const rows=parseCSV(txt);if(rows.length<2)throw Error('CSVにデータがありません');
+const h=rows[0].map(x=>norm(x));const idx=(...keys)=>h.findIndex(x=>keys.some(k=>x===norm(k)));
+const mi=idx('自販機','号機','machine'),ipc=idx('IPC名'),ci=idx('コラム','コラム番号','コラムNO．','コラムNO.','column'),pi=idx('商品名','商品','product'),vi=idx('現在庫','現在庫数','自販機在庫','在庫数','qty'),si=idx('ストッカー在庫','ストッカー現在庫','stock');
+if(pi<0||ci<0||vi<0)throw Error('RSクラウドCSVの「商品名」「コラムNO．」「現在庫数」が必要です');
+const draft=JSON.parse(JSON.stringify(state));let vendCount=0,stockCount=0,skipped=0;
+const dCanon=x=>{const n=norm(x);return draft.products.find(p=>norm(p)===n||norm(draft.aliases[p])===n)||null};
+// RSクラウドのIPC名は店舗名なので、取り込み先の号機を一度だけ確認する。
+const names=ipc>=0?[...new Set(rows.slice(1).map(r=>String(r[ipc]||'').trim()).filter(Boolean))]:[];
+const machineMap={};
+for(const name of names){const m=name.normalize('NFKC').match(/([12])\s*(?:号機)?$/);let n=m?Number(m[1]):NaN;
+if(![1,2].includes(n)){const answer=prompt(`「${name}」のCSVをどちらの自販機へ反映しますか？\n1 または 2 を入力してください。`, '1');if(answer===null){$('csvStatus').textContent='CSV取込をキャンセルしました';return}n=num(answer)}
+if(![1,2].includes(n))throw Error(`「${name}」の取り込み先は1または2で指定してください`);machineMap[name]=n}
+for(const [i,r] of rows.slice(1).entries()){
+const c=num(r[ci]);if(!cols.includes(c)){skipped++;continue}
+const name=String(r[pi]||'').trim();if(!name){skipped++;continue}
+const n=num(r[vi]);if(!Number.isSafeInteger(n)||n>10)throw Error(`${i+2}行目：現在庫数が0〜10ではありません`);
+let m=mi>=0?num(r[mi]):NaN;if(![1,2].includes(m)&&ipc>=0)m=machineMap[String(r[ipc]||'').trim()];if(![1,2].includes(m)&&names.length===0){const answer=prompt('このCSVを何号機に反映しますか？（1または2）','1');if(answer===null)return;m=num(answer)}
+if(![1,2].includes(m))throw Error(`${i+2}行目：自販機番号を判定できません`);
+let p=dCanon(name);if(!p){p=name;draft.products.push(p);draft.stock[p]=0;draft.aliases[p]=''}
+const v=draft.vends.find(v=>v.machine===m&&v.col===c);if(!v)throw Error(`${i+2}行目：対応するコラムがありません`);
+v.product=p;v.qty=n;vendCount++;
+}
+if(!vendCount)throw Error('奇数コラムの有効な在庫データがありません');
+const preview=draft.vends.filter(v=>rows.slice(1).some(r=>Number(r[ci])===v.col&&(ipc<0||machineMap[String(r[ipc]||'').trim()]===v.machine))).map(v=>`${v.machine}号機・${v.col}列 ${v.product}：${v.qty}個`).join('\n');
+if(!confirm(`以下の自販機在庫を反映しますか？\n\n${preview}\n\n更新${vendCount}列／対象外${skipped}行\n※ストッカー実在庫は変更しません。`)){$('csvStatus').textContent='CSV取込をキャンセルしました';return}
+snapshot();state=draft;log(`RSクラウドCSV取込：自販機${vendCount}列`);save();render();$('csvStatus').textContent=`反映完了：自販機${vendCount}列を更新しました（ストッカー在庫は変更なし）`;
+}catch(err){$('csvStatus').textContent='読み込みエラー：'+err.message;alert('CSVを反映できません：'+err.message)}finally{e.target.value=''}};
+$('export').onclick=()=>download('ど冷えもん_バックアップ.json',JSON.stringify(state,null,2),'application/json');
+$('import').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!Array.isArray(x.vends)||x.vends.length!==10||!x.stock)throw Error('形式が違います');if(!confirm('バックアップを読み込み、現在のデータを置き換えますか？'))return;snapshot();state={...base(),...x};state.products=state.products||[];for(const p of [...Object.keys(state.stock),...state.vends.map(v=>v.product)])if(p&&!state.products.includes(p))state.products.push(p);state.aliases=state.aliases||{};save();render()}catch(err){alert('復元エラー：'+err.message)}finally{e.target.value=''}};
+$('undo').onclick=()=>{if(!undo)return alert('戻せる操作がありません');state=JSON.parse(undo);undo=null;bring={};save();render()};
+$('reset').onclick=()=>{if(!confirm('全データを初期化しますか？'))return;snapshot();state=base();bring={};save();render()};
+save();render();
+})();
+</script></body></html>
